@@ -14,10 +14,11 @@ import { useColumnNames } from '../hooks/useColumnNames';
 import { TaskColumn } from './TaskColumn';
 import { TaskCard } from './TaskCard';
 import { TaskSidebar } from './TaskSidebar';
-import { Task, TaskStatus } from '../types/Task';
+import { Task } from '../types/Task';
+import { TaskStatus, VALID_TASK_STATUSES } from '../constants/taskStatus';
 import { Button } from './ui/button';
 import { Eye, EyeOff } from 'lucide-react';
-import { toast } from 'sonner@2.0.3';
+import { toast } from 'sonner';
 
 export function TaskBoard() {
   const { tasks, addTask, updateTask, deleteTask, moveTask, getTasksByStatus, isLoading } = useTasks();
@@ -50,7 +51,7 @@ export function TaskBoard() {
       const newStatus = over.id as TaskStatus;
       
       // Check if over.id is a valid status
-      if (['incoming', 'ai_captured', 'todo', 'done'].includes(newStatus)) {
+      if (VALID_TASK_STATUSES.includes(newStatus)) {
         moveTask(taskId, newStatus);
       }
     }

@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Generate Extension Icons</title>
+  <style>
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      max-width: 800px;
+      margin: 50px auto;
+      padding: 20px;
+      text-align: center;
+    }
+    h1 { color: #0a66c2; }
+    .icons { display: flex; gap: 20px; justify-content: center; margin: 30px 0; }
+    canvas { border: 2px solid #ddd; border-radius: 8px; }
+    button {
+      background: #0a66c2;
+      color: white;
+      border: none;
+      padding: 12px 24px;
+      border-radius: 8px;
+      font-size: 16px;
+      cursor: pointer;
+      margin: 10px;
+    }
+    button:hover { background: #004182; }
+    .instructions {
+      background: #f0f0f0;
+      padding: 20px;
+      border-radius: 8px;
+      text-align: left;
+      margin-top: 30px;
+    }
+  </style>
+</head>
+<body>
+  <h1>LinkedIn Task Creator - Icon Generator</h1>
+  <p>Click the buttons below to download the extension icons</p>
+
+  <div class="icons">
+    <div>
+      <canvas id="icon16" width="16" height="16"></canvas>
+      <p>16x16</p>
+    </div>
+    <div>
+      <canvas id="icon48" width="48" height="48"></canvas>
+      <p>48x48</p>
+    </div>
+    <div>
+      <canvas id="icon128" width="128" height="128"></canvas>
+      <p>128x128</p>
+    </div>
+  </div>
+
+  <div>
+    <button onclick="downloadIcon('icon16', 16)">Download icon16.png</button>
+    <button onclick="downloadIcon('icon48', 48)">Download icon48.png</button>
+    <button onclick="downloadIcon('icon128', 128)">Download icon128.png</button>
+  </div>
+
+  <button onclick="downloadAll()" style="background: #10b981;">Download All 3 Icons</button>
+
+  <div class="instructions">
+    <h3>Instructions:</h3>
+    <ol>
+      <li>Click "Download All 3 Icons" button above</li>
+      <li>Move the downloaded PNG files to this <code>icons/</code> folder</li>
+      <li>Make sure they're named: <code>icon16.png</code>, <code>icon48.png</code>, <code>icon128.png</code></li>
+      <li>Go to <code>chrome://extensions/</code> and click the refresh icon on your extension</li>
+      <li>Done! Your extension now has custom icons</li>
+    </ol>
+  </div>
+
+  <script>
+    // Draw the checkmark icon on all canvases
+    function drawIcon(canvasId, size) {
+      const canvas = document.getElementById(canvasId);
+      const ctx = canvas.getContext('2d');
+      
+      // Clear canvas
+      ctx.clearRect(0, 0, size, size);
+      
+      // Background - LinkedIn blue gradient
+      const gradient = ctx.createLinearGradient(0, 0, size, size);
+      gradient.addColorStop(0, '#0a66c2');
+      gradient.addColorStop(1, '#004182');
+      ctx.fillStyle = gradient;
+      
+      // Rounded square
+      const radius = size * 0.2;
+      ctx.beginPath();
+      ctx.moveTo(radius, 0);
+      ctx.lineTo(size - radius, 0);
+      ctx.quadraticCurveTo(size, 0, size, radius);
+      ctx.lineTo(size, size - radius);
+      ctx.quadraticCurveTo(size, size, size - radius, size);
+      ctx.lineTo(radius, size);
+      ctx.quadraticCurveTo(0, size, 0, size - radius);
+      ctx.lineTo(0, radius);
+      ctx.quadraticCurveTo(0, 0, radius, 0);
+      ctx.closePath();
+      ctx.fill();
+      
+      // Checkmark
+      ctx.strokeStyle = 'white';
+      ctx.lineWidth = size * 0.12;
+      ctx.lineCap = 'round';
+      ctx.lineJoin = 'round';
+      
+      const scale = size / 24; // Base scale on 24px design
+      
+      ctx.beginPath();
+      ctx.moveTo(6 * scale, 12 * scale);
+      ctx.lineTo(10 * scale, 16 * scale);
+      ctx.lineTo(18 * scale, 8 * scale);
+      ctx.stroke();
+    }
+
+    // Generate all icons
+    drawIcon('icon16', 16);
+    drawIcon('icon48', 48);
+    drawIcon('icon128', 128);
+
+    // Download function
+    function downloadIcon(canvasId, size) {
+      const canvas = document.getElementById(canvasId);
+      const link = document.createElement('a');
+      link.download = `icon${size}.png`;
+      link.href = canvas.toDataURL('image/png');
+      link.click();
+    }
+
+    // Download all icons
+    function downloadAll() {
+      setTimeout(() => downloadIcon('icon16', 16), 100);
+      setTimeout(() => downloadIcon('icon48', 48), 300);
+      setTimeout(() => downloadIcon('icon128', 128), 500);
+      
+      alert('All 3 icons downloaded! Move them to the icons/ folder.');
+    }
+  </script>
+</body>
+</html>
+

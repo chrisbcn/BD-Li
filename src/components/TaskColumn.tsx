@@ -1,7 +1,8 @@
 import { useState } from 'react';
 import { useDroppable } from '@dnd-kit/core';
 import { SortableContext, verticalListSortingStrategy } from '@dnd-kit/sortable';
-import { Task, TaskStatus } from '../types/Task';
+import { Task } from '../types/Task';
+import { TaskStatus } from '../constants/taskStatus';
 import { SortableTaskCard } from './SortableTaskCard';
 import { AddNewTask } from './AddNewTask';
 import { Zap, Target, CheckCircle2, Sparkles, Pencil } from 'lucide-react';

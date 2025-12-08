@@ -21,7 +21,7 @@ A frictionless personal task management application inspired by the Hoop app int
 - **Styling**: Tailwind CSS
 - **Drag & Drop**: `@dnd-kit/core`
 - **Icons**: `lucide-react`
-- **Backend**: Supabase (Key-Value/JSON storage pattern)
+- **Backend**: Supabase (PostgreSQL database with Row Level Security)
 
 ## Prerequisites
 
@@ -43,29 +43,35 @@ cd "Task Management App"
 npm install
 ```
 
-### 3. Configure Supabase
+### 3. Set Up Supabase Database
 
-1. Create a `.env` file in the root directory:
+**Important**: You need to set up the database schema before the app will work.
 
-```bash
-cp .env.example .env
-```
+1. **Create a Supabase project** (if you haven't already):
+   - Go to https://supabase.com and sign up/login
+   - Create a new project
 
-2. Get your Supabase credentials:
-   - Go to your Supabase project dashboard
-   - Navigate to Settings > API
-   - Copy your Project ID and anon/public key
+2. **Run the database migration**:
+   - Open your Supabase project dashboard
+   - Go to **SQL Editor** (left sidebar)
+   - Click **New Query**
+   - Copy and paste the contents of `supabase/migrations/001_create_tasks_table.sql`
+   - Click **Run** (or press Cmd/Ctrl + Enter)
 
-3. Update `.env` with your credentials:
+3. **Get your Supabase credentials**:
+   - Go to **Settings** → **API** in your Supabase dashboard
+   - Copy your **Project URL** (or just the project ID)
+   - Copy your **anon/public** key
 
-```env
-VITE_SUPABASE_PROJECT_ID=your-project-id
-VITE_SUPABASE_ANON_KEY=your-anon-key
-```
+4. **Configure environment variables** (optional):
+   - Create a `.env` file in the root directory:
+   ```bash
+   VITE_SUPABASE_PROJECT_ID=your-project-id
+   VITE_SUPABASE_ANON_KEY=your-anon-key
+   ```
+   - The app will use these if provided, otherwise falls back to defaults
 
-**Note**: Currently, the app uses hardcoded Supabase credentials in `src/utils/supabase/info.tsx`. For production, you should:
-- Move these to environment variables
-- Update `info.tsx` to read from `import.meta.env.VITE_SUPABASE_PROJECT_ID` and `import.meta.env.VITE_SUPABASE_ANON_KEY`
+**For detailed setup instructions, see [SUPABASE_SETUP.md](./SUPABASE_SETUP.md)**
 
 ### 4. Run the Development Server
 
@@ -92,11 +98,17 @@ src/
 │   ├── TaskBoard.tsx   # Main board component
 │   ├── TaskCard.tsx    # Individual task card with inline editing
 │   └── ...
+├── constants/          # Application constants
+│   └── taskStatus.ts   # Task status types and constants
+├── config/             # Configuration
+│   └── supabase.ts     # Supabase configuration (env vars)
+├── services/            # Business logic and API calls
+│   └── taskService.ts   # Task API service layer
 ├── hooks/              # Custom React hooks
-│   ├── useTasks.ts     # Task management and Supabase integration
+│   ├── useTasks.ts     # Task state management
 │   └── ...
 ├── types/              # TypeScript type definitions
-├── utils/              # Utility functions
+│   └── Task.ts         # Task type definitions
 └── supabase/           # Supabase Edge Functions
 ```
 
