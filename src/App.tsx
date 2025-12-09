@@ -1,7 +1,13 @@
+import { useState } from 'react';
 import { TaskBoard } from './components/TaskBoard';
+import { ContactsSection } from './components/ContactsSection';
+import { AnalyticsDashboard } from './components/AnalyticsDashboard';
+import { Navigation } from './components/Navigation';
 import { Toaster } from './components/ui/sonner';
 
 export default function App() {
+  const [activeSection, setActiveSection] = useState<'tasks' | 'contacts' | 'analytics'>('tasks');
+
   return (
     <div className="dark h-screen w-screen bg-background text-foreground overflow-hidden">
       <div className="h-full flex flex-col p-6">
@@ -23,22 +29,33 @@ export default function App() {
           </div>
           <div className="flex items-center gap-4">
             <p className="text-muted-foreground text-sm">
-              Simple task management that gets out of your way
+              CRM task management with relationship tracking
             </p>
-            <div className="flex items-center gap-3 text-xs text-muted-foreground">
-              <span className="flex items-center gap-1">
-                <kbd className="px-1.5 py-0.5 rounded bg-muted border border-border">N</kbd>
-                New task
-              </span>
-              <span className="flex items-center gap-1">
-                <kbd className="px-1.5 py-0.5 rounded bg-muted border border-border">D</kbd>
-                Toggle done
-              </span>
-            </div>
+            {activeSection === 'tasks' && (
+              <div className="flex items-center gap-3 text-xs text-muted-foreground">
+                <span className="flex items-center gap-1">
+                  <kbd className="px-1.5 py-0.5 rounded bg-muted border border-border">N</kbd>
+                  New task
+                </span>
+                <span className="flex items-center gap-1">
+                  <kbd className="px-1.5 py-0.5 rounded bg-muted border border-border">D</kbd>
+                  Toggle done
+                </span>
+              </div>
+            )}
           </div>
         </header>
 
-        <TaskBoard />
+        <Navigation
+          activeSection={activeSection}
+          onSectionChange={(section) => setActiveSection(section as 'tasks' | 'contacts')}
+        />
+
+        <div className="flex-1 min-h-0 overflow-hidden">
+          {activeSection === 'tasks' && <TaskBoard />}
+          {activeSection === 'contacts' && <ContactsSection />}
+          {activeSection === 'analytics' && <AnalyticsDashboard />}
+        </div>
       </div>
       <Toaster />
     </div>

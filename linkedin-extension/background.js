@@ -1,7 +1,6 @@
 // LinkedIn Task Creator - Background Service Worker
-// Handles API calls to the Task Management App
+// Connects directly to Supabase database
 
-const API_URL = 'http://localhost:3001'; // Your Task Management App URL
 const SUPABASE_URL = 'https://ibcinipuskqgwczuobyh.supabase.co';
 const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImliY2luaXB1c2txZ3djenVvYnloIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTkxODc0MzgsImV4cCI6MjA3NDc2MzQzOH0.hgQmhdeCfrgOFYPIvI0t6gSTs4viLqKQzysutHDLuds';
 

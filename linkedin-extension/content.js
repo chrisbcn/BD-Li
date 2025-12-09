@@ -136,10 +136,11 @@ function createFloatingButton() {
     align-items: center !important;
     gap: 8px !important;
     font-family: -apple-system, system-ui, sans-serif !important;
+    width: 150px !important;
   `;
   
   taskButton.innerHTML = `
-    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#252C32" stroke-width="2">
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#FAAFB6" stroke-width="2">
       <path d="M9 11l3 3L22 4"></path>
       <path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"></path>
     </svg>

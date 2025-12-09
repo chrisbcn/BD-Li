@@ -10,6 +10,7 @@ import { TaskStatus } from '../constants/taskStatus';
 import {
   fetchTasks,
   saveTasks,
+  saveTask,
   deleteTask as deleteTaskService,
   createTask,
   processRecurringTasks,
@@ -19,8 +20,8 @@ interface UseTasksReturn {
   tasks: Task[];
   isLoading: boolean;
   error: string | null;
-  addTask: (title: string, description: string, status?: TaskStatus) => Task;
-  updateTask: (id: string, updates: Partial<Task>) => void;
+  addTask: (title: string, description: string, status?: TaskStatus) => Promise<Task>;
+  updateTask: (id: string, updates: Partial<Task>) => Promise<void>;
   deleteTask: (id: string) => void;
   moveTask: (id: string, newStatus: TaskStatus) => void;
   getTasksByStatus: (status: TaskStatus) => Task[];
@@ -96,30 +97,61 @@ export function useTasks(): UseTasksReturn {
   }, [tasks, isInitialized]);
 
   const addTask = useCallback(
-    (
+    async (
       title: string,
       description: string = '',
       status: TaskStatus = 'incoming'
-    ): Task => {
+    ): Promise<Task> => {
       const newTaskInput = createTask(title, description, status);
       const newTask: Task = {
         ...newTaskInput,
         id: crypto.randomUUID(),
       };
-      setTasks((prev) => [...prev, newTask]);
-      return newTask;
+      
+      // Immediately save to database
+      try {
+        const savedTask = await saveTask(newTask);
+        setTasks((prev) => [...prev, savedTask]);
+        return savedTask;
+      } catch (err) {
+        console.error('Error saving new task:', err);
+        // Still add to local state for optimistic UI
+        setTasks((prev) => [...prev, newTask]);
+        return newTask;
+      }
     },
     []
   );
 
-  const updateTask = useCallback((id: string, updates: Partial<Task>) => {
-    setTasks((prev) =>
-      prev.map((task) =>
+  const updateTask = useCallback(async (id: string, updates: Partial<Task>) => {
+    // Get current task before updating
+    let previousTask: Task | undefined;
+    setTasks((prev) => {
+      previousTask = prev.find(t => t.id === id);
+      return prev.map((task) =>
         task.id === id
           ? { ...task, ...updates, updated_at: new Date() }
           : task
-      )
-    );
+      );
+    });
+    
+    // Immediately save to database
+    if (previousTask) {
+      try {
+        const taskToSave = { ...previousTask, ...updates, updated_at: new Date() };
+        await saveTask(taskToSave);
+      } catch (err) {
+        console.error('Error saving task update:', err);
+        // Revert optimistic update on error
+        if (previousTask) {
+          setTasks((prev) =>
+            prev.map((task) =>
+              task.id === id ? previousTask! : task
+            )
+          );
+        }
+      }
+    }
   }, []);
 
   const deleteTask = useCallback(

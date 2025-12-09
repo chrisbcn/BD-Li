@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Task, TaskPriority } from '../types/Task';
 import { formatRelativeTime, formatDueDate } from '../utils/taskHelpers';
 import { X, Mail, Calendar, Clock, Tag, User, Building, DollarSign, Edit2, Check, Trash2, Video, Sparkles, ExternalLink, AlertCircle, Repeat } from 'lucide-react';
@@ -31,6 +31,18 @@ export function TaskSidebar({ task, onUpdate, onDelete, onClose }: TaskSidebarPr
   const [leadName, setLeadName] = useState(task.contact?.name || '');
   const [recurrenceEnabled, setRecurrenceEnabled] = useState(task.recurrence_enabled ?? true);
   const [recurrenceDays, setRecurrenceDays] = useState(task.recurrence_days ?? 7);
+
+  // Handle ESC key to close sidebar
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        onClose();
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [onClose]);
 
   const handleSave = () => {
     const updates: Partial<Task> = {
@@ -125,8 +137,17 @@ export function TaskSidebar({ task, onUpdate, onDelete, onClose }: TaskSidebarPr
   const isAICaptured = task.status === 'ai_captured';
 
   return (
-    <div className="fixed inset-y-0 right-0 w-full max-w-xl bg-background border-l border-border overflow-y-auto z-50 shadow-2xl">
-      <div className="sticky top-0 bg-background border-b border-border px-6 py-4 flex items-center justify-between">
+    <>
+      {/* Overlay backdrop */}
+      <div 
+        className="fixed inset-0 bg-black/20 z-40"
+        onClick={onClose}
+        aria-hidden="true"
+      />
+      
+      {/* Sidebar */}
+      <div className="fixed inset-y-0 right-0 w-full max-w-xl bg-background border-l border-border overflow-y-auto z-50 shadow-2xl">
+        <div className="sticky top-0 bg-background border-b border-border px-6 py-4 flex items-center justify-between">
         <Tabs defaultValue="details" className="flex-1">
           <TabsList>
             <TabsTrigger value="details">Details</TabsTrigger>
@@ -167,28 +188,30 @@ export function TaskSidebar({ task, onUpdate, onDelete, onClose }: TaskSidebarPr
         <div className="mb-6">
           {isEditing ? (
             <>
-              <div className="mb-3">
-                <label className="text-sm text-muted-foreground mb-1 block">Title</label>
+              <div className="mb-4">
+                <label className="text-sm text-muted-foreground mb-2 block">Title</label>
                 <Input
                   value={title}
                   onChange={(e) => setTitle(e.target.value)}
                   placeholder="Task title"
                   autoFocus
+                  className="px-4 py-3"
                 />
               </div>
-              <div className="mb-3">
-                <label className="text-sm text-muted-foreground mb-1 block">Description</label>
+              <div className="mb-4">
+                <label className="text-sm text-muted-foreground mb-2 block">Description</label>
                 <Textarea
                   value={description}
                   onChange={(e) => setDescription(e.target.value)}
                   placeholder="Add a description..."
                   rows={4}
+                  className="px-4 py-3"
                 />
               </div>
-              <div className="mb-3">
-                <label className="text-sm text-muted-foreground mb-1 block">Priority</label>
+              <div className="mb-4">
+                <label className="text-sm text-muted-foreground mb-2 block">Priority</label>
                 <Select value={priority} onValueChange={(value) => setPriority(value as TaskPriority)}>
-                  <SelectTrigger>
+                  <SelectTrigger className="px-4 py-3 h-auto">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
@@ -198,44 +221,49 @@ export function TaskSidebar({ task, onUpdate, onDelete, onClose }: TaskSidebarPr
                   </SelectContent>
                 </Select>
               </div>
-              <div className="mb-3">
-                <label className="text-sm text-muted-foreground mb-1 block">Client</label>
+              <div className="mb-4">
+                <label className="text-sm text-muted-foreground mb-2 block">Client</label>
                 <Input
                   value={client}
                   onChange={(e) => setClient(e.target.value)}
                   placeholder="Client or company name"
+                  className="px-4 py-3"
                 />
               </div>
-              <div className="mb-3">
-                <label className="text-sm text-muted-foreground mb-1 block">Deal ID</label>
+              <div className="mb-4">
+                <label className="text-sm text-muted-foreground mb-2 block">Deal ID</label>
                 <Input
                   value={dealId}
                   onChange={(e) => setDealId(e.target.value)}
                   placeholder="Associated deal identifier"
+                  className="px-4 py-3"
                 />
               </div>
-              <div className="mb-3">
-                <label className="text-sm text-muted-foreground mb-1 block">Labels</label>
+              <div className="mb-4">
+                <label className="text-sm text-muted-foreground mb-2 block">Labels</label>
                 <Input
                   value={labelsInput}
                   onChange={(e) => setLabelsInput(e.target.value)}
                   placeholder="Comma-separated labels (e.g., urgent, finance, q4)"
+                  className="px-4 py-3"
                 />
               </div>
-              <div className="mb-3">
-                <label className="text-sm text-muted-foreground mb-1 block">Category</label>
+              <div className="mb-4">
+                <label className="text-sm text-muted-foreground mb-2 block">Category</label>
                 <Input
                   value={category}
                   onChange={(e) => setCategory(e.target.value)}
                   placeholder="e.g., high-priority, renewal"
+                  className="px-4 py-3"
                 />
               </div>
-              <div className="mb-3">
-                <label className="text-sm text-muted-foreground mb-1 block">Lead/Person</label>
+              <div className="mb-4">
+                <label className="text-sm text-muted-foreground mb-2 block">Lead/Person</label>
                 <Input
                   value={leadName}
                   onChange={(e) => setLeadName(e.target.value)}
                   placeholder="Name of contact or lead"
+                  className="px-4 py-3"
                 />
               </div>
               <div className="flex gap-2">
@@ -497,5 +525,6 @@ export function TaskSidebar({ task, onUpdate, onDelete, onClose }: TaskSidebarPr
         </div>
       </div>
     </div>
+    </>
   );
 }

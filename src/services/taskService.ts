@@ -63,16 +63,44 @@ export async function fetchTasks(): Promise<Task[]> {
  */
 export async function saveTask(task: Task): Promise<Task> {
   try {
-    // Convert Date objects to ISO strings for database
-    const taskData = {
-      ...task,
-      created_at: task.created_at.toISOString(),
-      updated_at: task.updated_at.toISOString(),
+    // Only include fields that exist in the database schema
+    const taskData: any = {
+      id: task.id,
+      title: task.title,
+      description: task.description || '',
+      status: task.status,
+      priority: task.priority || null,
       due_date: task.due_date?.toISOString() || null,
       completed_date: task.completed_date?.toISOString() || null,
-      // JSONB fields are automatically handled by Supabase
+      recurrence_enabled: task.recurrence_enabled ?? true,
+      recurrence_days: task.recurrence_days ?? 7,
+      source: task.source || 'manual',
+      labels: task.labels || null,
+      tags: task.tags || null,
+      assignee: task.assignee || null,
+      client: task.client || null,
+      deal_id: task.deal_id || null,
+      confidence_score: task.confidence_score || null,
+      source_reference: task.source_reference || null,
+      contact: task.contact || null,
+      account_info: task.account_info || null,
+      next_actions: task.next_actions || null,
+      recent_activity: task.recent_activity || null,
+      // Only include contact_id if it exists in the task (migration 002 adds this column)
+      // contact_id: (task as any).contact_id || null,
+      created_at: task.created_at.toISOString(),
+      updated_at: task.updated_at.toISOString(),
     };
 
+    // Remove null/undefined values for optional fields to avoid issues
+    Object.keys(taskData).forEach(key => {
+      if (taskData[key] === undefined) {
+        delete taskData[key];
+      }
+    });
+
+    console.log('Saving task to database:', { id: task.id, title: task.title, status: task.status });
+    
     const { data, error } = await supabase
       .from('tasks')
       .upsert(taskData, { onConflict: 'id' })
@@ -80,8 +108,17 @@ export async function saveTask(task: Task): Promise<Task> {
       .single();
 
     if (error) {
-      throw new Error(error.message);
+      console.error('Supabase error details:', {
+        message: error.message,
+        details: error.details,
+        hint: error.hint,
+        code: error.code,
+        taskData: taskData
+      });
+      throw new Error(`Database error: ${error.message}${error.details ? ` - ${error.details}` : ''}`);
     }
+
+    console.log('Task saved successfully:', data?.id);
 
     return parseTaskDates(data);
   } catch (error) {

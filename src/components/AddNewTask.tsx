@@ -3,7 +3,7 @@ import { Plus } from 'lucide-react';
 import { Textarea } from './ui/textarea';
 
 interface AddNewTaskProps {
-  onAdd: (title: string, description: string) => void;
+  onAdd: (title: string, description: string) => Promise<void> | void;
   externalTrigger?: boolean;
   onExternalTriggerComplete?: () => void;
 }
@@ -27,9 +27,9 @@ export function AddNewTask({ onAdd, externalTrigger, onExternalTriggerComplete }
     }
   }, [isAdding]);
 
-  const handleSave = () => {
+  const handleSave = async () => {
     if (title.trim()) {
-      onAdd(title.trim(), description.trim());
+      await onAdd(title.trim(), description.trim());
       setTitle('');
       setDescription('');
       setIsAdding(false);

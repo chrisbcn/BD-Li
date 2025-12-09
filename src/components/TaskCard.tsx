@@ -37,12 +37,8 @@ export function TaskCard({ task, onClick, onToggleComplete, onAcceptAI, onDismis
 
   const handleTitleClick = (e: React.MouseEvent) => {
     e.stopPropagation();
-    if (onUpdate) {
-      setIsEditing(true);
-      setEditingTitle(task.title);
-    } else {
-      onClick();
-    }
+    // Always open sidebar on click, not edit mode
+    onClick();
   };
 
   const handleSave = () => {
@@ -245,8 +241,8 @@ export function TaskCard({ task, onClick, onToggleComplete, onAcceptAI, onDismis
   return (
     <div
       onClick={(e) => {
-        // Don't open sidebar if we're editing or if user clicked on the title area
-        if (!isEditing && !(e.target as HTMLElement).closest('input')) {
+        // Don't open sidebar if we're editing or if user clicked on interactive elements
+        if (!isEditing && !(e.target as HTMLElement).closest('input') && !(e.target as HTMLElement).closest('button')) {
           onClick();
         }
       }}
@@ -282,7 +278,7 @@ export function TaskCard({ task, onClick, onToggleComplete, onAcceptAI, onDismis
             />
           ) : (
             <h4 
-              className={`mb-1 ${isCompleted ? 'line-through text-muted-foreground' : ''} ${onUpdate ? 'cursor-text' : ''}`}
+              className={`mb-1 ${isCompleted ? 'line-through text-muted-foreground' : ''} cursor-pointer`}
               onClick={handleTitleClick}
             >
               {task.title}

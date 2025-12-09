@@ -59,11 +59,12 @@ export function TaskBoard() {
     setActiveTask(null);
   };
 
-  const handleAddTask = (status: TaskStatus) => (title: string, description: string) => {
-    addTask(title, description, status);
+  const handleAddTask = (status: TaskStatus) => async (title: string, description: string) => {
+    await addTask(title, description, status);
   };
 
   const handleTaskClick = (task: Task) => {
+    console.log('Task clicked:', task.title);
     setSelectedTask(task);
   };
 
@@ -125,6 +126,10 @@ export function TaskBoard() {
   const currentSelectedTask = selectedTask 
     ? tasks.find(t => t.id === selectedTask.id) || selectedTask
     : null;
+  
+  console.log('Selected task:', selectedTask?.title || 'none', selectedTask);
+  console.log('Current selected task:', currentSelectedTask?.title || 'none', currentSelectedTask);
+  console.log('Should render sidebar:', !!currentSelectedTask);
 
   if (isLoading) {
     return (

@@ -13,11 +13,11 @@ const getEnvVar = (key: string, fallback: string): string => {
 export const supabaseConfig = {
   projectId: getEnvVar(
     'VITE_SUPABASE_PROJECT_ID',
-    'arbfeygvxnksqhgbpfpc'
+    'ibcinipuskqgwczuobyh'
   ),
   anonKey: getEnvVar(
     'VITE_SUPABASE_ANON_KEY',
-    'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFyYmZleWd2eG5rc3FoZ2JwZnBjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTk3NzE5MDMsImV4cCI6MjA3NTM0NzkwM30.hMY57ZriQlpXvo4RTYuIVkjHc5e8NKmQH1jnHRtZuww'
+    'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImliY2luaXB1c2txZ3djenVvYnloIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTkxODc0MzgsImV4cCI6MjA3NDc2MzQzOH0.hgQmhdeCfrgOFYPIvI0t6gSTs4viLqKQzysutHDLuds'
   ),
   functionName: 'make-server-4aa4529b',
 } as const;
