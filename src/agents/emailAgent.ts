@@ -16,6 +16,7 @@ import { Activity, CreateActivityInput } from '../types/Activity';
 import * as taskService from '../services/taskService';
 import * as contactService from '../services/contactService';
 import * as activityService from '../services/activityService';
+import { supabase } from '../lib/supabase';
 
 export interface EmailData {
   id: string;
@@ -35,6 +36,12 @@ export interface ExtractedTask {
   dueDate?: Date;
   priority: 'low' | 'medium' | 'high';
   confidence: number; // 0-100
+}
+
+export interface GmailScanOptions {
+  days?: number;
+  maxResults?: number;
+  unreadOnly?: boolean;
 }
 
 /**
@@ -194,6 +201,37 @@ export async function processEmails(emails: EmailData[]): Promise<{
     tasks: allTasks,
     contacts: allContacts,
     activities: allActivities,
+  };
+}
+
+/**
+ * Trigger Gmail auto-scan via Edge Function
+ */
+export async function scanGmailForTasks(options: GmailScanOptions = {}): Promise<{
+  messagesScanned: number;
+  tasksCreated: number;
+  tasksSkipped: number;
+}> {
+  const { data, error } = await supabase.functions.invoke('gmail-scan', {
+    body: {
+      days: options.days ?? 7,
+      maxResults: options.maxResults ?? 20,
+      unreadOnly: options.unreadOnly ?? true,
+    },
+  });
+
+  if (error) {
+    throw error;
+  }
+
+  if (!data?.success) {
+    throw new Error(data?.error || 'Gmail scan failed');
+  }
+
+  return {
+    messagesScanned: data.messagesScanned ?? 0,
+    tasksCreated: data.tasksCreated ?? 0,
+    tasksSkipped: data.tasksSkipped ?? 0,
   };
 }
 
