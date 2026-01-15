@@ -6,6 +6,80 @@ function isMessagingPage() {
   return window.location.pathname.includes('/messaging/');
 }
 
+const AUTO_SCAN_INTERVAL_MS = 120000; // 2 min
+const AUTO_SCAN_COOLDOWN_MS = 300000; // 5 min per thread
+const AUTO_SCAN_MIN_MESSAGES = 3;
+const AUTO_SCAN_ENABLED_KEY = 'linkedin_auto_scan_enabled';
+const AUTO_SCAN_STATE_KEY = 'linkedin_auto_scan_state';
+
+let autoScanInFlight = false;
+let scanBtnRef = null;
+let statusElRef = null;
+let autoScanToggleRef = null;
+let autoScanIntervalId = null;
+
+function isAutoScanEnabled() {
+  const stored = localStorage.getItem(AUTO_SCAN_ENABLED_KEY);
+  return stored !== 'false';
+}
+
+function setAutoScanEnabled(enabled) {
+  localStorage.setItem(AUTO_SCAN_ENABLED_KEY, enabled ? 'true' : 'false');
+  updateAutoScanToggle();
+}
+
+function updateAutoScanToggle() {
+  if (!autoScanToggleRef) return;
+  const enabled = isAutoScanEnabled();
+  autoScanToggleRef.textContent = `Auto-scan: ${enabled ? 'On' : 'Off'}`;
+}
+
+function updateStatus(text, clearAfterMs = 0) {
+  if (!statusElRef) return;
+  statusElRef.textContent = text;
+  if (clearAfterMs > 0) {
+    setTimeout(() => {
+      if (statusElRef && statusElRef.textContent === text) {
+        statusElRef.textContent = '';
+      }
+    }, clearAfterMs);
+  }
+}
+
+function setScanButtonState(disabled, text) {
+  if (!scanBtnRef) return;
+  scanBtnRef.disabled = disabled;
+  if (text) {
+    scanBtnRef.textContent = text;
+  }
+}
+
+function computeHash(input) {
+  let hash = 0;
+  for (let i = 0; i < input.length; i += 1) {
+    hash = ((hash << 5) - hash) + input.charCodeAt(i);
+    hash |= 0; // Convert to 32bit integer
+  }
+  return String(hash);
+}
+
+function loadAutoScanState() {
+  try {
+    const raw = localStorage.getItem(AUTO_SCAN_STATE_KEY);
+    return raw ? JSON.parse(raw) : {};
+  } catch {
+    return {};
+  }
+}
+
+function saveAutoScanState(state) {
+  try {
+    localStorage.setItem(AUTO_SCAN_STATE_KEY, JSON.stringify(state));
+  } catch {
+    // Ignore storage errors
+  }
+}
+
 // Extract messages from the LinkedIn messaging interface
 function extractMessages() {
   const messages = [];
@@ -61,6 +135,22 @@ function extractConversationPartner() {
     '.msg-overlay-bubble-header__title a',
     '.msg-thread__topic-name'
   ];
+  const avatarSelectors = [
+    '.msg-thread__link-to-profile img',
+    '.msg-overlay-bubble-header__title img',
+    '.msg-thread__avatar img',
+    '.msg-overlay-bubble-header__avatar img'
+  ];
+
+  const getAvatarUrl = () => {
+    for (const selector of avatarSelectors) {
+      const imgEl = document.querySelector(selector);
+      if (imgEl) {
+        return imgEl.getAttribute('src') || imgEl.getAttribute('data-delayed-url');
+      }
+    }
+    return null;
+  };
 
   for (const selector of partnerSelectors) {
     const partnerEl = document.querySelector(selector);
@@ -68,6 +158,7 @@ function extractConversationPartner() {
       return {
         name: partnerEl.textContent.trim(),
         url: partnerEl.href || window.location.href,
+        avatar: getAvatarUrl(),
       };
     }
   }
@@ -75,7 +166,107 @@ function extractConversationPartner() {
   return {
     name: 'Unknown',
     url: window.location.href,
+    avatar: getAvatarUrl(),
   };
+}
+
+async function scanMessages({ source = 'manual', messages, partner, threadKey, hash } = {}) {
+  if (autoScanInFlight) return;
+  autoScanInFlight = true;
+
+  const isManual = source === 'manual';
+
+  if (isManual) {
+    setScanButtonState(true, 'Scanning...');
+    updateStatus('Extracting messages...');
+  } else {
+    updateStatus('🤖 Auto-scanning...', 0);
+  }
+
+  try {
+    const resolvedMessages = messages || extractMessages();
+    if (resolvedMessages.length === 0) {
+      if (isManual) {
+        updateStatus('No messages found', 3000);
+        setScanButtonState(false, 'Scan Messages for Tasks');
+      }
+      return;
+    }
+
+    const resolvedPartner = partner || extractConversationPartner();
+    const resolvedThreadKey = threadKey || resolvedPartner.url || window.location.href;
+    const resolvedHash = hash || computeHash(
+      resolvedMessages.map((msg) => `${msg.sender}|${msg.text}`).join('|')
+    );
+
+    if (isManual) {
+      updateStatus(`Found ${resolvedMessages.length} messages`);
+      setTimeout(() => {
+        updateStatus('🤖 AI analyzing...');
+      }, 500);
+    }
+
+    chrome.runtime.sendMessage({
+      type: 'SCAN_LINKEDIN_MESSAGES',
+      data: {
+        messages: resolvedMessages,
+        partner: resolvedPartner,
+      },
+    }, (response) => {
+      if (response && response.success) {
+        if (response.tasksCreated > 0) {
+          updateStatus(`✨ ${isManual ? 'Created' : 'Auto-created'} ${response.tasksCreated} AI tasks!`, 4000);
+        } else {
+          updateStatus('✓ No action items found', 4000);
+        }
+      } else {
+        updateStatus(`✗ ${response?.error || 'Error scanning messages'}`, 4000);
+      }
+
+      const state = loadAutoScanState();
+      state[resolvedThreadKey] = {
+        hash: resolvedHash,
+        lastScanAt: Date.now(),
+      };
+      saveAutoScanState(state);
+
+      if (isManual) {
+        setScanButtonState(false, 'Scan Messages for Tasks');
+      }
+      autoScanInFlight = false;
+    });
+  } catch (error) {
+    console.error('Error scanning messages:', error);
+    updateStatus('✗ Error scanning messages', 4000);
+    if (isManual) {
+      setScanButtonState(false, 'Scan Messages for Tasks');
+    }
+    autoScanInFlight = false;
+  }
+}
+
+function autoScanIfNeeded() {
+  if (!isAutoScanEnabled() || autoScanInFlight || !isMessagingPage()) return;
+
+  const messages = extractMessages();
+  if (messages.length < AUTO_SCAN_MIN_MESSAGES) return;
+
+  const partner = extractConversationPartner();
+  const threadKey = partner.url || window.location.href;
+  const hash = computeHash(messages.map((msg) => `${msg.sender}|${msg.text}`).join('|'));
+
+  const state = loadAutoScanState();
+  const lastState = state[threadKey];
+  const recentlyScanned = lastState && (Date.now() - lastState.lastScanAt < AUTO_SCAN_COOLDOWN_MS);
+  if (lastState && lastState.hash === hash && recentlyScanned) return;
+
+  scanMessages({ source: 'auto', messages, partner, threadKey, hash });
+}
+
+function startAutoScan() {
+  if (autoScanIntervalId) return;
+  autoScanIntervalId = setInterval(autoScanIfNeeded, AUTO_SCAN_INTERVAL_MS);
+  setTimeout(autoScanIfNeeded, 3000);
 }
 
 // Create the message scanner UI
@@ -127,6 +318,7 @@ function createMessageScannerUI() {
       Scan Messages for Tasks
     </button>
     <div id="scan-status" style="margin-top: 8px; font-size: 12px; text-align: center; opacity: 0.9;"></div>
+    <div id="auto-scan-toggle" style="margin-top: 6px; font-size: 11px; text-align: center; opacity: 0.8; cursor: pointer;"></div>
   `;
 
   document.body.appendChild(scannerContainer);
@@ -134,66 +326,15 @@ function createMessageScannerUI() {
   // Add event listener
   const scanBtn = document.getElementById('scan-messages-btn');
   const statusEl = document.getElementById('scan-status');
+  const autoScanToggle = document.getElementById('auto-scan-toggle');
+  scanBtnRef = scanBtn;
+  statusElRef = statusEl;
+  autoScanToggleRef = autoScanToggle;
+  updateAutoScanToggle();
 
-  scanBtn.addEventListener('click', async () => {
-    scanBtn.disabled = true;
-    scanBtn.textContent = 'Scanning...';
-    statusEl.textContent = 'Extracting messages...';
-
-    try {
-      // Extract messages
-      const messages = extractMessages();
-      
-      if (messages.length === 0) {
-        statusEl.textContent = 'No messages found';
-        scanBtn.textContent = 'Scan Messages for Tasks';
-        scanBtn.disabled = false;
-        return;
-      }
-
-      statusEl.textContent = `Found ${messages.length} messages`;
-
-      // Get conversation partner
-      const partner = extractConversationPartner();
-
-      // Update status for AI processing
-      setTimeout(() => {
-        statusEl.textContent = '🤖 AI analyzing...';
-      }, 500);
-
-      // Send to background script for AI processing
-      chrome.runtime.sendMessage({
-        type: 'SCAN_LINKEDIN_MESSAGES',
-        data: {
-          messages,
-          partner,
-        },
-      }, (response) => {
-        if (response && response.success) {
-          if (response.tasksCreated > 0) {
-            statusEl.textContent = `✨ Created ${response.tasksCreated} AI tasks!`;
-          } else {
-            statusEl.textContent = '✓ No action items found';
-          }
-          setTimeout(() => {
-            statusEl.textContent = '';
-          }, 4000);
-        } else {
-          statusEl.textContent = `✗ ${response?.error || 'Error scanning messages'}`;
-          setTimeout(() => {
-            statusEl.textContent = '';
-          }, 4000);
-        }
-        scanBtn.textContent = 'Scan Messages for Tasks';
-        scanBtn.disabled = false;
-      });
-
-    } catch (error) {
-      console.error('Error scanning messages:', error);
-      statusEl.textContent = '✗ Error scanning messages';
-      scanBtn.textContent = 'Scan Messages for Tasks';
-      scanBtn.disabled = false;
-    }
+  scanBtn.addEventListener('click', () => scanMessages({ source: 'manual' }));
+  autoScanToggle.addEventListener('click', () => {
+    setAutoScanEnabled(!isAutoScanEnabled());
   });
 }
 
@@ -205,6 +346,7 @@ if (isMessagingPage()) {
   } else {
     createMessageScannerUI();
   }
+  startAutoScan();
 
   // Re-inject on navigation (LinkedIn is SPA)
   let lastUrl = location.href;
@@ -214,6 +356,7 @@ if (isMessagingPage()) {
       lastUrl = url;
       if (isMessagingPage()) {
         setTimeout(createMessageScannerUI, 1000);
+        startAutoScan();
       } else {
         const scanner = document.getElementById('linkedin-message-scanner');
         if (scanner) scanner.remove();
