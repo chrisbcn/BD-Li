@@ -19,6 +19,11 @@ export function TaskCard({ task, onClick, onToggleComplete, onAcceptAI, onDismis
   const [isEditing, setIsEditing] = useState(false);
   const [editingTitle, setEditingTitle] = useState(task.title);
   const inputRef = useRef<HTMLInputElement>(null);
+  const contactLinkedInUrl = task.contact?.linkedin_url || (
+    task.source_reference?.original_url?.includes('linkedin.com')
+      ? task.source_reference.original_url
+      : undefined
+  );
 
   // Update editing title when task changes
   useEffect(() => {
@@ -78,6 +83,10 @@ export function TaskCard({ task, onClick, onToggleComplete, onAcceptAI, onDismis
         return <Video className="w-3 h-3" />;
       case 'gemini':
         return <Sparkles className="w-3 h-3" />;
+      case 'linkedin':
+        return <ExternalLink className="w-3 h-3" />;
+      case 'slack':
+        return <ExternalLink className="w-3 h-3" />;
       default:
         return null;
     }
@@ -93,6 +102,10 @@ export function TaskCard({ task, onClick, onToggleComplete, onAcceptAI, onDismis
         return 'Meet';
       case 'gemini':
         return 'Gemini';
+      case 'linkedin':
+        return 'LinkedIn';
+      case 'slack':
+        return 'Slack';
       default:
         return 'Manual';
     }
@@ -206,14 +219,32 @@ export function TaskCard({ task, onClick, onToggleComplete, onAcceptAI, onDismis
           {/* Contact badge */}
           {task.contact && (
             <div className="flex items-center gap-2">
-              <div className="flex items-center gap-2 px-2 py-1 bg-muted/50 rounded text-xs">
-                <div className="w-4 h-4 bg-primary/20 rounded-full flex items-center justify-center">
-                  <span className="text-[10px]">
-                    {task.contact.name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2)}
-                  </span>
+              {contactLinkedInUrl ? (
+                <a
+                  href={contactLinkedInUrl}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="flex items-center gap-2 px-2 py-1 bg-muted/50 rounded text-xs hover:underline"
+                  onClick={(e) => e.stopPropagation()}
+                >
+                  <div className="w-4 h-4 bg-primary/20 rounded-full flex items-center justify-center">
+                    <span className="text-[10px]">
+                      {task.contact.name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2)}
+                    </span>
+                  </div>
+                  <span>{task.contact.name}</span>
+                  <ExternalLink className="w-3 h-3 text-muted-foreground" />
+                </a>
+              ) : (
+                <div className="flex items-center gap-2 px-2 py-1 bg-muted/50 rounded text-xs">
+                  <div className="w-4 h-4 bg-primary/20 rounded-full flex items-center justify-center">
+                    <span className="text-[10px]">
+                      {task.contact.name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2)}
+                    </span>
+                  </div>
+                  <span>{task.contact.name}</span>
                 </div>
-                <span>{task.contact.name}</span>
-              </div>
+              )}
             </div>
           )}
         </div>

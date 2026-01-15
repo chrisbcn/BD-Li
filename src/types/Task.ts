@@ -8,7 +8,7 @@ export type TaskPriority = 'low' | 'medium' | 'high';
 /**
  * Source of task creation
  */
-export type TaskSource = 'manual' | 'gmail' | 'meet' | 'calendar' | 'gemini';
+export type TaskSource = 'manual' | 'gmail' | 'meet' | 'calendar' | 'gemini' | 'linkedin' | 'slack';
 
 /**
  * Simplified task interface
@@ -57,6 +57,7 @@ export interface Task {
     email?: string;
     role?: string;
     company?: string;
+    linkedin_url?: string;
     avatar?: string;
     last_contact?: Date;
   };

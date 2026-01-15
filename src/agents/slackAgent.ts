@@ -109,6 +109,7 @@ async function processSlackMessage(
         name: contact.name,
         email: contact.email,
         avatar: contact.url,
+        linkedin_url: contact.linkedin_url,
       },
     };
 

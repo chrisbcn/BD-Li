@@ -148,6 +148,7 @@ export async function processTranscript(
             email: contact.email,
             company: contact.company,
             avatar: contact.avatar_url,
+            linkedin_url: contact.linkedin_url,
           };
         }
       }

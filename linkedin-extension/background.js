@@ -263,6 +263,7 @@ async function scanLinkedInMessages(data) {
           role: null,
           company: null,
           avatar: null,
+          linkedin_url: partner.url,
         },
         source_reference: {
           original_url: partner.url,

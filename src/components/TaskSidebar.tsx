@@ -31,6 +31,11 @@ export function TaskSidebar({ task, onUpdate, onDelete, onClose }: TaskSidebarPr
   const [leadName, setLeadName] = useState(task.contact?.name || '');
   const [recurrenceEnabled, setRecurrenceEnabled] = useState(task.recurrence_enabled ?? true);
   const [recurrenceDays, setRecurrenceDays] = useState(task.recurrence_days ?? 7);
+  const contactLinkedInUrl = task.contact?.linkedin_url || (
+    task.source_reference?.original_url?.includes('linkedin.com')
+      ? task.source_reference.original_url
+      : undefined
+  );
 
   // Handle ESC key to close sidebar
   useEffect(() => {
@@ -400,23 +405,55 @@ export function TaskSidebar({ task, onUpdate, onDelete, onClose }: TaskSidebarPr
         {task.contact && (
           <div className="mb-6">
             <div className="flex items-center gap-3 mb-4">
-              <Avatar className="w-12 h-12">
-                <AvatarImage src={task.contact.avatar} />
-                <AvatarFallback>{initials}</AvatarFallback>
-              </Avatar>
-              <div>
-                <h3 className="text-sm">{task.contact.name}</h3>
-                {task.contact.role && task.contact.company && (
-                  <p className="text-xs text-muted-foreground">
-                    {task.contact.role} | {task.contact.company}
-                  </p>
-                )}
-                {task.contact.email && (
-                  <p className="text-xs text-muted-foreground">
-                    {task.contact.email}
-                  </p>
-                )}
-              </div>
+              {contactLinkedInUrl ? (
+                <a
+                  href={contactLinkedInUrl}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="flex items-center gap-3 group"
+                >
+                  <Avatar className="w-12 h-12">
+                    <AvatarImage src={task.contact.avatar} />
+                    <AvatarFallback>{initials}</AvatarFallback>
+                  </Avatar>
+                  <div>
+                    <div className="flex items-center gap-1">
+                      <h3 className="text-sm group-hover:underline">{task.contact.name}</h3>
+                      <ExternalLink className="w-3 h-3 text-muted-foreground group-hover:text-foreground" />
+                    </div>
+                    {task.contact.role && task.contact.company && (
+                      <p className="text-xs text-muted-foreground">
+                        {task.contact.role} | {task.contact.company}
+                      </p>
+                    )}
+                    {task.contact.email && (
+                      <p className="text-xs text-muted-foreground">
+                        {task.contact.email}
+                      </p>
+                    )}
+                  </div>
+                </a>
+              ) : (
+                <>
+                  <Avatar className="w-12 h-12">
+                    <AvatarImage src={task.contact.avatar} />
+                    <AvatarFallback>{initials}</AvatarFallback>
+                  </Avatar>
+                  <div>
+                    <h3 className="text-sm">{task.contact.name}</h3>
+                    {task.contact.role && task.contact.company && (
+                      <p className="text-xs text-muted-foreground">
+                        {task.contact.role} | {task.contact.company}
+                      </p>
+                    )}
+                    {task.contact.email && (
+                      <p className="text-xs text-muted-foreground">
+                        {task.contact.email}
+                      </p>
+                    )}
+                  </div>
+                </>
+              )}
               {task.contact.last_contact && (
                 <div className="ml-auto text-xs text-muted-foreground flex items-center gap-1">
                   <Clock className="w-3 h-3" />
