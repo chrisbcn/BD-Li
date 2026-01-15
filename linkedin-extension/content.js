@@ -3,6 +3,7 @@
 
 let taskButton = null;
 let taskModal = null;
+let currentProfileData = null; // Store current profile data
 
 // Check if we're on a profile page
 function isProfilePage() {
@@ -446,15 +447,50 @@ function applyTemplate(template, profileData) {
   };
 }
 
+// Update modal with new profile data
+function updateModalProfileData(modal, profileData) {
+  const profileInfoDiv = modal.querySelector('.linkedin-task-profile-info');
+  if (!profileInfoDiv) return;
+  
+  profileInfoDiv.innerHTML = `
+    ${profileData.profileImage ? `<img src="${profileData.profileImage}" alt="${profileData.name}" />` : '<div class="profile-placeholder"></div>'}
+    <div>
+      <div class="profile-name">${profileData.name || 'Unknown'}</div>
+      <div class="profile-headline">${profileData.headline || ''}</div>
+      ${profileData.company ? `<div class="profile-company">${profileData.company}</div>` : ''}
+    </div>
+  `;
+  
+  // Also update the template to use new name/company
+  const templateSelect = modal.querySelector('#task-template');
+  if (templateSelect) {
+    const currentTemplate = templates.find(t => t.id === templateSelect.value);
+    if (currentTemplate) {
+      const { title, description } = applyTemplate(currentTemplate, profileData);
+      const titleInput = modal.querySelector('#task-title');
+      const descInput = modal.querySelector('#task-description');
+      if (titleInput) titleInput.value = title;
+      if (descInput) descInput.value = description;
+    }
+  }
+  
+  console.log('[LinkedIn Task Creator] Updated modal with new profile data');
+}
+
 // Show the task creation modal
 function showTaskModal() {
+  // Always re-extract profile data for current profile
+  currentProfileData = extractProfileData();
+  console.log('[LinkedIn Task Creator] Extracted profile data:', currentProfileData);
+  
+  // If modal exists, update it with new profile data
   if (taskModal) {
+    updateModalProfileData(taskModal, currentProfileData);
     taskModal.style.display = 'flex';
     return;
   }
-
-  const profileData = extractProfileData();
-  console.log('[LinkedIn Task Creator] Extracted profile data:', profileData);
+  
+  const profileData = currentProfileData;
 
   // Create modal
   taskModal = document.createElement('div');
@@ -530,7 +566,8 @@ function showTaskModal() {
   templateSelect.addEventListener('change', (e) => {
     const template = templates.find(t => t.id === e.target.value);
     if (template) {
-      const applied = applyTemplate(template, profileData);
+      // Use current profile data (updated when modal is opened)
+      const applied = applyTemplate(template, currentProfileData || profileData);
       titleInput.value = applied.title;
       descriptionInput.value = applied.description;
     }
@@ -549,6 +586,9 @@ function showTaskModal() {
 
   // Create task handler
   createBtn.addEventListener('click', async () => {
+    // Use current profile data (updated when modal is opened)
+    const profile = currentProfileData || profileData;
+    
     const taskData = {
       title: titleInput.value.trim(),
       description: descriptionInput.value.trim(),
@@ -557,12 +597,12 @@ function showTaskModal() {
       source: 'manual',
       labels: ['linkedin'],
       contact: {
-        name: profileData.name,
+        name: profile.name,
         email: '', // Not available from LinkedIn
-        role: profileData.headline,
-        company: profileData.company,
-        avatar: profileData.profileImage,
-        linkedin_url: profileData.url
+        role: profile.headline,
+        company: profile.company,
+        avatar: profile.profileImage,
+        linkedin_url: profile.url
       }
     };
 
@@ -630,9 +670,19 @@ let lastUrl = location.href;
 new MutationObserver(() => {
   const url = location.href;
   if (url !== lastUrl) {
+    console.log('[LinkedIn Task Creator] URL changed from', lastUrl, 'to', url);
     lastUrl = url;
+    
+    // Close and clear modal if it's open
+    if (taskModal) {
+      taskModal.remove();
+      taskModal = null;
+      console.log('[LinkedIn Task Creator] Modal cleared for new profile');
+    }
+    
     taskButton = null; // Reset button reference
     injectionAttempts = 0; // Reset attempt counter
+    
     if (isProfilePage()) {
       setTimeout(attemptInjection, 500);
     }

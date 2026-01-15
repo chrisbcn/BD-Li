@@ -1,23 +1,59 @@
 {
   "manifest_version": 3,
-  "name": "LinkedIn Task Creator",
-  "version": "1.0.0",
-  "description": "Create tasks from LinkedIn profiles with one click",
+  "name": "Comedia Task Agent",
+  "version": "1.2.0",
+  "description": "AI Agent that extracts tasks from LinkedIn and Google Meet using VertexAI",
   "permissions": [
     "storage",
     "activeTab",
-    "notifications"
+    "notifications",
+    "scripting"
   ],
   "host_permissions": [
     "https://www.linkedin.com/*",
+    "https://meet.google.com/*",
+    "https://zoom.us/*",
+    "https://*.zoom.us/*",
     "http://localhost:3001/*",
     "https://ibcinipuskqgwczuobyh.supabase.co/*"
   ],
   "content_scripts": [
     {
-      "matches": ["https://www.linkedin.com/*"],
-      "js": ["content.js"],
-      "css": ["styles.css"],
+      "matches": [
+        "https://www.linkedin.com/*"
+      ],
+      "js": [
+        "content.js",
+        "messageScanner.js"
+      ],
+      "css": [
+        "styles.css"
+      ],
+      "run_at": "document_idle"
+    },
+    {
+      "matches": [
+        "https://meet.google.com/*"
+      ],
+      "js": [
+        "meetContent.js"
+      ],
+      "css": [
+        "styles.css"
+      ],
+      "run_at": "document_idle"
+    },
+    {
+      "matches": [
+        "https://zoom.us/*",
+        "https://*.zoom.us/*"
+      ],
+      "js": [
+        "zoomContent.js"
+      ],
+      "css": [
+        "styles.css"
+      ],
       "run_at": "document_idle"
     }
   ],
@@ -38,4 +74,3 @@
     "128": "icons/icon128.svg"
   }
 }
-

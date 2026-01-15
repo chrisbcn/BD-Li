@@ -8,7 +8,6 @@ import { TaskStatus, TASK_STATUS } from '../constants/taskStatus';
 
 const DEFAULT_COLUMN_NAMES: Record<TaskStatus, string> = {
   [TASK_STATUS.INCOMING]: 'Incoming',
-  [TASK_STATUS.AI_CAPTURED]: 'AI Captured',
   [TASK_STATUS.TODO]: 'To-do',
   [TASK_STATUS.DONE]: 'Done',
 };
@@ -30,7 +29,6 @@ export async function fetchColumnNames(): Promise<Record<TaskStatus, string>> {
     if (data) {
       return {
         [TASK_STATUS.INCOMING]: data.incoming || DEFAULT_COLUMN_NAMES[TASK_STATUS.INCOMING],
-        [TASK_STATUS.AI_CAPTURED]: data.ai_captured || DEFAULT_COLUMN_NAMES[TASK_STATUS.AI_CAPTURED],
         [TASK_STATUS.TODO]: data.todo || DEFAULT_COLUMN_NAMES[TASK_STATUS.TODO],
         [TASK_STATUS.DONE]: data.done || DEFAULT_COLUMN_NAMES[TASK_STATUS.DONE],
       };
@@ -54,7 +52,6 @@ export async function saveColumnNames(
         {
           user_id: null, // For now, single user
           incoming: columnNames[TASK_STATUS.INCOMING],
-          ai_captured: columnNames[TASK_STATUS.AI_CAPTURED],
           todo: columnNames[TASK_STATUS.TODO],
           done: columnNames[TASK_STATUS.DONE],
         },

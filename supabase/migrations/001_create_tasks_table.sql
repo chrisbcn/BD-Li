@@ -43,31 +43,43 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
-CREATE TRIGGER update_tasks_updated_at
-  BEFORE UPDATE ON tasks
-  FOR EACH ROW
-  EXECUTE FUNCTION update_updated_at_column();
+DO $$
+BEGIN
+  IF NOT EXISTS (SELECT 1 FROM pg_trigger WHERE tgname = 'update_tasks_updated_at') THEN
+    CREATE TRIGGER update_tasks_updated_at
+      BEFORE UPDATE ON tasks
+      FOR EACH ROW
+      EXECUTE FUNCTION update_updated_at_column();
+  END IF;
+END
+$$;
+
 
 -- Enable Row Level Security (RLS)
 ALTER TABLE tasks ENABLE ROW LEVEL SECURITY;
 
 -- Create policy to allow all operations for authenticated users
 -- For now, we'll allow public access (you can restrict this later)
-CREATE POLICY "Allow public read access" ON tasks
-  FOR SELECT
-  USING (true);
+DO $$
+BEGIN
+  IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE tablename = 'tasks' AND policyname = 'Allow public read access') THEN
+    CREATE POLICY "Allow public read access" ON tasks FOR SELECT USING (true);
+  END IF;
 
-CREATE POLICY "Allow public insert access" ON tasks
-  FOR INSERT
-  WITH CHECK (true);
+  IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE tablename = 'tasks' AND policyname = 'Allow public insert access') THEN
+    CREATE POLICY "Allow public insert access" ON tasks FOR INSERT WITH CHECK (true);
+  END IF;
 
-CREATE POLICY "Allow public update access" ON tasks
-  FOR UPDATE
-  USING (true);
+  IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE tablename = 'tasks' AND policyname = 'Allow public update access') THEN
+    CREATE POLICY "Allow public update access" ON tasks FOR UPDATE USING (true);
+  END IF;
 
-CREATE POLICY "Allow public delete access" ON tasks
-  FOR DELETE
-  USING (true);
+  IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE tablename = 'tasks' AND policyname = 'Allow public delete access') THEN
+    CREATE POLICY "Allow public delete access" ON tasks FOR DELETE USING (true);
+  END IF;
+END
+$$;
+
 
 -- Create column_names table for custom column names
 CREATE TABLE IF NOT EXISTS column_names (
@@ -85,7 +97,12 @@ CREATE TABLE IF NOT EXISTS column_names (
 -- Enable RLS for column_names
 ALTER TABLE column_names ENABLE ROW LEVEL SECURITY;
 
-CREATE POLICY "Allow public access to column names" ON column_names
-  FOR ALL
-  USING (true);
+DO $$
+BEGIN
+  IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE tablename = 'column_names' AND policyname = 'Allow public access to column names') THEN
+    CREATE POLICY "Allow public access to column names" ON column_names FOR ALL USING (true);
+  END IF;
+END
+$$;
+
 

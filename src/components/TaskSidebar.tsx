@@ -134,7 +134,7 @@ export function TaskSidebar({ task, onUpdate, onDelete, onClose }: TaskSidebarPr
         .toUpperCase()
     : '?';
 
-  const isAICaptured = task.status === 'ai_captured';
+  const isAIExtracted = task.confidence_score !== undefined && task.confidence_score > 0;
 
   return (
     <>
@@ -160,22 +160,22 @@ export function TaskSidebar({ task, onUpdate, onDelete, onClose }: TaskSidebarPr
       </div>
 
       <div className="p-6">
-        {/* AI Captured Banner */}
-        {isAICaptured && (
-          <div className="mb-6 p-4 bg-primary/10 border border-primary/20 rounded-lg">
+        {/* AI Extracted Banner */}
+        {isAIExtracted && (
+          <div className="mb-6 p-4 bg-purple-500/10 border border-purple-500/20 rounded-lg">
             <div className="flex items-center gap-2 mb-2">
-              <Sparkles className="w-4 h-4 text-primary" />
-              <span className="text-sm">AI Captured Task</span>
+              <Sparkles className="w-4 h-4 text-purple-400" />
+              <span className="text-sm text-purple-400">AI Extracted Task</span>
             </div>
             <div className="text-xs text-muted-foreground mb-3">
-              This task was automatically captured from {getSourceLabel()} with {task.confidence_score || 0}% confidence
+              This task was automatically extracted from {getSourceLabel()} with {task.confidence_score || 0}% confidence
             </div>
             {task.source_reference?.original_url && (
               <a
                 href={task.source_reference.original_url}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="text-xs text-primary hover:underline flex items-center gap-1"
+                className="text-xs text-purple-400 hover:underline flex items-center gap-1"
               >
                 View Original Source
                 <ExternalLink className="w-3 h-3" />

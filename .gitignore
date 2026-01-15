@@ -38,3 +38,11 @@ lerna-debug.log*
 # Vite
 .vite/
 
+
+# Credentials & Secrets
+google_service_account.json
+*.pem
+*.key
+
+# Supabase
+supabase/.temp/

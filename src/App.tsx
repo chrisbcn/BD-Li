@@ -2,11 +2,13 @@ import { useState } from 'react';
 import { TaskBoard } from './components/TaskBoard';
 import { ContactsSection } from './components/ContactsSection';
 import { AnalyticsDashboard } from './components/AnalyticsDashboard';
+import { AIAgentsPanel } from './components/AIAgentsPanel';
+import { TranscriptHistory } from './components/TranscriptHistory';
 import { Navigation } from './components/Navigation';
 import { Toaster } from './components/ui/sonner';
 
 export default function App() {
-  const [activeSection, setActiveSection] = useState<'tasks' | 'contacts' | 'analytics'>('tasks');
+  const [activeSection, setActiveSection] = useState<'tasks' | 'contacts' | 'analytics' | 'ai-agents' | 'transcripts'>('tasks');
 
   return (
     <div className="dark h-screen w-screen bg-background text-foreground overflow-hidden">
@@ -48,13 +50,14 @@ export default function App() {
 
         <Navigation
           activeSection={activeSection}
-          onSectionChange={(section) => setActiveSection(section as 'tasks' | 'contacts')}
+          onSectionChange={(section) => setActiveSection(section as 'tasks' | 'contacts' | 'analytics' | 'ai-agents')}
         />
 
         <div className="flex-1 min-h-0 overflow-hidden">
           {activeSection === 'tasks' && <TaskBoard />}
           {activeSection === 'contacts' && <ContactsSection />}
           {activeSection === 'analytics' && <AnalyticsDashboard />}
+          {activeSection === 'ai-agents' && <AIAgentsPanel />}
         </div>
       </div>
       <Toaster />

@@ -72,15 +72,28 @@ CREATE INDEX IF NOT EXISTS idx_activities_type ON activities(type);
 CREATE INDEX IF NOT EXISTS idx_tasks_contact_id ON tasks(contact_id);
 
 -- Updated_at triggers
-CREATE TRIGGER update_contacts_updated_at
-  BEFORE UPDATE ON contacts
-  FOR EACH ROW
-  EXECUTE FUNCTION update_updated_at_column();
+DO $$
+BEGIN
+  IF NOT EXISTS (SELECT 1 FROM pg_trigger WHERE tgname = 'update_contacts_updated_at') THEN
+    CREATE TRIGGER update_contacts_updated_at
+      BEFORE UPDATE ON contacts
+      FOR EACH ROW
+      EXECUTE FUNCTION update_updated_at_column();
+  END IF;
+END
+$$;
 
-CREATE TRIGGER update_activities_updated_at
-  BEFORE UPDATE ON activities
-  FOR EACH ROW
-  EXECUTE FUNCTION update_updated_at_column();
+DO $$
+BEGIN
+  IF NOT EXISTS (SELECT 1 FROM pg_trigger WHERE tgname = 'update_activities_updated_at') THEN
+    CREATE TRIGGER update_activities_updated_at
+      BEFORE UPDATE ON activities
+      FOR EACH ROW
+      EXECUTE FUNCTION update_updated_at_column();
+  END IF;
+END
+$$;
+
 
 -- Enable RLS
 ALTER TABLE contacts ENABLE ROW LEVEL SECURITY;
@@ -88,36 +101,55 @@ ALTER TABLE activities ENABLE ROW LEVEL SECURITY;
 ALTER TABLE contact_tasks ENABLE ROW LEVEL SECURITY;
 
 -- RLS Policies (public access for now, can restrict later)
-CREATE POLICY "Allow public read access to contacts" ON contacts
-  FOR SELECT USING (true);
+DO $$
+BEGIN
+  -- Contacts policies
+  IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE tablename = 'contacts' AND policyname = 'Allow public read access to contacts') THEN
+    CREATE POLICY "Allow public read access to contacts" ON contacts FOR SELECT USING (true);
+  END IF;
 
-CREATE POLICY "Allow public insert access to contacts" ON contacts
-  FOR INSERT WITH CHECK (true);
+  IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE tablename = 'contacts' AND policyname = 'Allow public insert access to contacts') THEN
+    CREATE POLICY "Allow public insert access to contacts" ON contacts FOR INSERT WITH CHECK (true);
+  END IF;
 
-CREATE POLICY "Allow public update access to contacts" ON contacts
-  FOR UPDATE USING (true);
+  IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE tablename = 'contacts' AND policyname = 'Allow public update access to contacts') THEN
+    CREATE POLICY "Allow public update access to contacts" ON contacts FOR UPDATE USING (true);
+  END IF;
 
-CREATE POLICY "Allow public delete access to contacts" ON contacts
-  FOR DELETE USING (true);
+  IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE tablename = 'contacts' AND policyname = 'Allow public delete access to contacts') THEN
+    CREATE POLICY "Allow public delete access to contacts" ON contacts FOR DELETE USING (true);
+  END IF;
 
-CREATE POLICY "Allow public read access to activities" ON activities
-  FOR SELECT USING (true);
+  -- Activities policies
+  IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE tablename = 'activities' AND policyname = 'Allow public read access to activities') THEN
+    CREATE POLICY "Allow public read access to activities" ON activities FOR SELECT USING (true);
+  END IF;
 
-CREATE POLICY "Allow public insert access to activities" ON activities
-  FOR INSERT WITH CHECK (true);
+  IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE tablename = 'activities' AND policyname = 'Allow public insert access to activities') THEN
+    CREATE POLICY "Allow public insert access to activities" ON activities FOR INSERT WITH CHECK (true);
+  END IF;
 
-CREATE POLICY "Allow public update access to activities" ON activities
-  FOR UPDATE USING (true);
+  IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE tablename = 'activities' AND policyname = 'Allow public update access to activities') THEN
+    CREATE POLICY "Allow public update access to activities" ON activities FOR UPDATE USING (true);
+  END IF;
 
-CREATE POLICY "Allow public delete access to activities" ON activities
-  FOR DELETE USING (true);
+  IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE tablename = 'activities' AND policyname = 'Allow public delete access to activities') THEN
+    CREATE POLICY "Allow public delete access to activities" ON activities FOR DELETE USING (true);
+  END IF;
 
-CREATE POLICY "Allow public read access to contact_tasks" ON contact_tasks
-  FOR SELECT USING (true);
+  -- Contact Tasks policies
+  IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE tablename = 'contact_tasks' AND policyname = 'Allow public read access to contact_tasks') THEN
+    CREATE POLICY "Allow public read access to contact_tasks" ON contact_tasks FOR SELECT USING (true);
+  END IF;
 
-CREATE POLICY "Allow public insert access to contact_tasks" ON contact_tasks
-  FOR INSERT WITH CHECK (true);
+  IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE tablename = 'contact_tasks' AND policyname = 'Allow public insert access to contact_tasks') THEN
+    CREATE POLICY "Allow public insert access to contact_tasks" ON contact_tasks FOR INSERT WITH CHECK (true);
+  END IF;
 
-CREATE POLICY "Allow public delete access to contact_tasks" ON contact_tasks
-  FOR DELETE USING (true);
+  IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE tablename = 'contact_tasks' AND policyname = 'Allow public delete access to contact_tasks') THEN
+    CREATE POLICY "Allow public delete access to contact_tasks" ON contact_tasks FOR DELETE USING (true);
+  END IF;
+END
+$$;
+
 

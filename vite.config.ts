@@ -5,6 +5,10 @@
 
   export default defineConfig({
     plugins: [react()],
+    define: {
+      'process.env': {},
+      global: 'globalThis',
+    },
     resolve: {
       extensions: ['.js', '.jsx', '.ts', '.tsx', '.json'],
       alias: {

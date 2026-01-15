@@ -1,4 +1,4 @@
-import { LayoutDashboard, Users, CheckSquare, BarChart3 } from 'lucide-react';
+import { LayoutDashboard, Users, CheckSquare, BarChart3, Bot, FileText } from 'lucide-react';
 import { Button } from './ui/button';
 import { cn } from './ui/utils';
 
@@ -12,6 +12,8 @@ const navItems: NavItem[] = [
   { id: 'tasks', label: 'Tasks', icon: CheckSquare },
   { id: 'contacts', label: 'Contacts', icon: Users },
   { id: 'analytics', label: 'Analytics', icon: BarChart3 },
+  { id: 'ai-agents', label: 'AI Agents', icon: Bot },
+  { id: 'transcripts', label: 'Transcripts', icon: FileText },
 ];
 
 interface NavigationProps {

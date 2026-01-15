@@ -118,7 +118,6 @@ export function TaskBoard() {
   }, [selectedTask]);
 
   const incomingTasks = getTasksByStatus('incoming');
-  const aiCapturedTasks = getTasksByStatus('ai_captured');
   const todoTasks = getTasksByStatus('todo');
   const doneTasks = getTasksByStatus('done');
 
@@ -140,7 +139,7 @@ export function TaskBoard() {
   }
 
   return (
-    <div className="flex-1 flex flex-col min-h-0">
+    <div className="h-full flex flex-col min-h-0 overflow-hidden">
       <div className="flex items-center justify-end mb-6 shrink-0">
         <Button
           variant="outline"
@@ -167,7 +166,7 @@ export function TaskBoard() {
         onDragStart={handleDragStart}
         onDragEnd={handleDragEnd}
       >
-        <div className={`flex-1 grid gap-6 min-h-0 ${showDone ? 'grid-cols-1 md:grid-cols-2 lg:grid-cols-4' : 'grid-cols-1 md:grid-cols-2 lg:grid-cols-3'}`}>
+        <div className={`flex-1 grid gap-6 min-h-0 overflow-hidden ${showDone ? 'grid-cols-1 md:grid-cols-2 lg:grid-cols-3' : 'grid-cols-1 md:grid-cols-2'}`}>
           <TaskColumn
             title={columnNames.incoming}
             status="incoming"
@@ -177,17 +176,6 @@ export function TaskBoard() {
             onAdd={handleAddTask('incoming')}
             onTitleChange={(newTitle) => updateColumnName('incoming', newTitle)}
             count={incomingTasks.length}
-            onUpdate={updateTask}
-          />
-          <TaskColumn
-            title={columnNames.ai_captured}
-            status="ai_captured"
-            tasks={aiCapturedTasks}
-            onTaskClick={handleTaskClick}
-            onAcceptAI={handleAcceptAI}
-            onDismissAI={handleDismissAI}
-            onTitleChange={(newTitle) => updateColumnName('ai_captured', newTitle)}
-            count={aiCapturedTasks.length}
             onUpdate={updateTask}
           />
           <TaskColumn

@@ -6,7 +6,6 @@ export const TASK_STATUS = {
   INCOMING: 'incoming',
   TODO: 'todo',
   DONE: 'done',
-  AI_CAPTURED: 'ai_captured', // Optional: for AI-generated tasks
 } as const;
 
 export type TaskStatus = typeof TASK_STATUS[keyof typeof TASK_STATUS];

@@ -112,132 +112,9 @@ export function TaskCard({ task, onClick, onToggleComplete, onAcceptAI, onDismis
   };
 
   const isCompleted = task.status === 'done';
-  const isAICaptured = task.status === 'ai_captured';
+  const isAIExtracted = task.confidence_score !== undefined && task.confidence_score > 0;
 
-  // AI Captured Task Card
-  if (isAICaptured) {
-    const sourceEmail = task.contact?.email || 'unknown sender';
-    
-    return (
-      <div
-        className="group bg-card border border-border rounded-lg p-4 mb-2 hover:border-primary/30 transition-colors"
-      >
-        <div className="flex items-start justify-between gap-2 mb-3">
-          <div className="flex items-center gap-2 min-w-0 flex-1">
-            {getSourceIcon()}
-            <h4 className="truncate cursor-pointer" onClick={onClick}>
-              {task.title}
-            </h4>
-          </div>
-          <button className="text-muted-foreground hover:text-foreground shrink-0">
-            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <circle cx="12" cy="12" r="1" fill="currentColor"/>
-              <circle cx="12" cy="5" r="1" fill="currentColor"/>
-              <circle cx="12" cy="19" r="1" fill="currentColor"/>
-            </svg>
-          </button>
-        </div>
-
-        <div className="border-t border-border my-3"></div>
-
-        {/* Source info */}
-        <div className="text-xs text-muted-foreground mb-2">
-          Source: {getSourceLabel()} {sourceEmail !== 'unknown sender' && `from ${sourceEmail}`}
-        </div>
-
-        {/* Client and Deal */}
-        {(task.client || task.deal_id) && (
-          <div className="text-xs text-muted-foreground mb-2">
-            {task.client && <span>Client: {task.client}</span>}
-            {task.client && task.deal_id && <span> | </span>}
-            {task.deal_id && <span>Deal: {task.deal_id.replace(/_/g, ' ')}</span>}
-          </div>
-        )}
-
-        {/* Due date and Priority */}
-        <div className="text-xs mb-2 flex items-center gap-2">
-          {task.due_date && (
-            <span className="text-muted-foreground">
-              Due: {new Date(task.due_date).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}
-            </span>
-          )}
-          {task.due_date && task.priority && <span className="text-muted-foreground">|</span>}
-          {task.priority && (
-            <span className={getPriorityColor()}>
-              Priority: {task.priority.charAt(0).toUpperCase() + task.priority.slice(1)}
-            </span>
-          )}
-        </div>
-
-        {/* Context snippet */}
-        {task.source_reference?.snippet && (
-          <div className="text-xs text-muted-foreground mb-3 italic bg-muted/30 p-2 rounded">
-            Context: "{task.source_reference.snippet}"
-          </div>
-        )}
-
-        {/* Confidence */}
-        <div className="text-xs text-muted-foreground mb-3">
-          Confidence: {task.confidence_score || 0}%
-        </div>
-
-        {/* Actions */}
-        <div className="flex items-center gap-2 mb-3">
-          <Button
-            size="sm"
-            variant="outline"
-            className="h-8 text-xs flex-1"
-            onClick={(e) => {
-              e.stopPropagation();
-              onAcceptAI?.();
-            }}
-          >
-            <Check className="w-3.5 h-3.5 mr-1.5" />
-            Accept
-          </Button>
-          <Button
-            size="sm"
-            variant="outline"
-            className="h-8 text-xs flex-1"
-            onClick={(e) => {
-              e.stopPropagation();
-              onDismissAI?.();
-            }}
-          >
-            <X className="w-3.5 h-3.5 mr-1.5" />
-            Dismiss
-          </Button>
-        </div>
-
-        {/* View Links */}
-        <div className="flex items-center gap-3 text-xs">
-          {task.source_reference?.original_url && (
-            <a
-              href={task.source_reference.original_url}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-primary hover:underline flex items-center gap-1"
-              onClick={(e) => e.stopPropagation()}
-            >
-              View Original {getSourceLabel()}
-              <ExternalLink className="w-3 h-3" />
-            </a>
-          )}
-          <button
-            className="text-primary hover:underline"
-            onClick={(e) => {
-              e.stopPropagation();
-              onClick();
-            }}
-          >
-            View Context
-          </button>
-        </div>
-      </div>
-    );
-  }
-
-  // Regular Task Card
+  // Task Card (with AI badge if AI-extracted)
   return (
     <div
       onClick={(e) => {
@@ -266,24 +143,33 @@ export function TaskCard({ task, onClick, onToggleComplete, onAcceptAI, onDismis
 
         {/* Content */}
         <div className="flex-1 min-w-0">
-          {isEditing ? (
-            <Input
-              ref={inputRef}
-              value={editingTitle}
-              onChange={(e) => setEditingTitle(e.target.value)}
-              onKeyDown={handleKeyDown}
-              onBlur={handleBlur}
-              className={`mb-1 h-auto text-base font-medium ${isCompleted ? 'line-through text-muted-foreground' : ''}`}
-              onClick={(e) => e.stopPropagation()}
-            />
-          ) : (
-            <h4 
-              className={`mb-1 ${isCompleted ? 'line-through text-muted-foreground' : ''} cursor-pointer`}
-              onClick={handleTitleClick}
-            >
-              {task.title}
-            </h4>
-          )}
+          <div className="flex items-center gap-2 mb-1">
+            {isEditing ? (
+              <Input
+                ref={inputRef}
+                value={editingTitle}
+                onChange={(e) => setEditingTitle(e.target.value)}
+                onKeyDown={handleKeyDown}
+                onBlur={handleBlur}
+                className={`h-auto text-base font-medium flex-1 ${isCompleted ? 'line-through text-muted-foreground' : ''}`}
+                onClick={(e) => e.stopPropagation()}
+              />
+            ) : (
+              <h4 
+                className={`flex-1 ${isCompleted ? 'line-through text-muted-foreground' : ''} cursor-pointer`}
+                onClick={handleTitleClick}
+              >
+                {task.title}
+              </h4>
+            )}
+            {/* AI Badge */}
+            {isAIExtracted && (
+              <div className="shrink-0 flex items-center gap-1 px-2 py-0.5 bg-purple-500/10 border border-purple-500/20 rounded-full text-[10px] text-purple-400">
+                <Sparkles className="w-3 h-3" />
+                <span>AI</span>
+              </div>
+            )}
+          </div>
           
           {task.description && (
             <p className="text-sm text-muted-foreground mb-2 line-clamp-2">
